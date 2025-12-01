@@ -6,6 +6,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Initialise pico_sdk from installed location
+# (note this can come from environment, CMake cache etc)
+
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
@@ -20,55 +23,45 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-
-# Set board to Pico 2
 set(PICO_BOARD pico2_w CACHE STRING "Board type")
 
-# Import Pico SDK
+# Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-# Import pico-extras (needed for powman example functions)
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Automatically fetch pico-extras if missing")
 include(pico_extras_import.cmake)
 
 project(soil_sensor C CXX ASM)
 
-# Initialize Pico SDK
+# Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add executable
-add_executable(soil_sensor
-    soil_sensor.c
-)
+# Add executable. Default name is the project name, version 0.1
+
+add_executable(soil_sensor soil_sensor.c )
 
 pico_set_program_name(soil_sensor "soil_sensor")
 pico_set_program_version(soil_sensor "0.1")
 
-# Enable USB stdio
+# Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(soil_sensor 0)
 pico_enable_stdio_usb(soil_sensor 1)
 
-# -------------------------------
-# Required libraries for powman OFF
-# -------------------------------
-#
-# You MUST link:
-#   hardware_powman     → powman controller
-#   pico_powman_example → helper functions (powman_example_init, off_for_ms)
-#   pico_stdlib         → stdlib
-#   hardware_adc        → ADC sensor readings
-#
-# DO NOT link hardware_rtc (RP2350 has no RTC!)
-# -------------------------------
-
+# Add the standard library to the build
 target_link_libraries(soil_sensor
-    pico_stdlib
-    pico_printf
+        hardware_adc
+        hardware_sleep
+        pico_printf 
+        pico_stdlib)
 
-    hardware_adc
-    hardware_clocks
-    hardware_powman
-    pico_powman_example      # <--- IMPORTANT
+# Add the standard include files to the build
+target_include_directories(soil_sensor PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_include_direc
+# Add any user requested libraries
+target_link_libraries(soil_sensor 
+        
+        )
+
+pico_add_extra_outputs(soil_sensor)
