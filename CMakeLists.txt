@@ -64,11 +64,14 @@ pico_enable_stdio_usb(soil_sensor 1)
 target_link_libraries(soil_sensor
     pico_stdlib
     pico_printf
-
     hardware_adc
     hardware_clocks
     hardware_powman
-    pico_powman_example      # <--- IMPORTANT
 )
 
-target_include_direc
+target_include_directories(soil_sensor PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+
+# Create UF2, ELF etc.
+pico_add_extra_outputs(soil_sensor)
