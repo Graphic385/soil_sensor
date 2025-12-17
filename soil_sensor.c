@@ -20,8 +20,8 @@
 #define NUM_READINGS 10
 #define SENSOR_SETTLE_MS 30
 #define PUMP_TIME_MS 3000
-#define WAKE_INTERVAL_MS 10000 // how long to sleep (10 sec)
-#define THRESHOLD_PERCENT 20
+#define WAKE_INTERVAL_MS 1000 // how long to sleep (10 sec)
+#define THRESHOLD_PERCENT 10
 
 static powman_power_state off_state;
 static powman_power_state on_state;
@@ -137,12 +137,7 @@ int main() {
 
     // Persistent variable across resets (powman scratch register)
     // scratch[0]   = dry_count
-    // scratch[1]   = boot counter (just for debugging)
     uint32_t dry_count = powman_hw->scratch[0];
-    powman_hw->scratch[1]++;
-
-    printf("\nWakeup #%u  dry_count=%u\n",
-           powman_hw->scratch[1], dry_count);
 
     // ----------- SETUP HARDWARE -------------
     adc_init();
@@ -172,8 +167,6 @@ int main() {
     uint16_t avg_raw = sum / NUM_READINGS;
     int32_t percent = (100 * (int32_t)(avg_raw - DRY)) / (WET - DRY);
 
-    printf("Raw ADC: %u  Percent Wet: %d%%\n", avg_raw, percent);
-
     if (percent < 0)
         percent = 0;
     if (percent > 100)
@@ -195,9 +188,6 @@ int main() {
 
     // Save back to powman scratch RAM
     powman_hw->scratch[0] = dry_count;
-
-    printf("Sleeping for %d ms (powman OFF)\n", WAKE_INTERVAL_MS);
-    sleep_ms(10);
 
     // ----- ENTER POWMAN-OFF SLEEP -----
     int rc = powman_off_for_ms(WAKE_INTERVAL_MS);
